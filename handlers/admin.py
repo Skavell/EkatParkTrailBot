@@ -5,12 +5,12 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from config import load_config, save_config
+from config import load_config, update_config_field, save_config
 from keyboards.inline import (
     admin_menu_kb,
     edit_content_kb,
     edit_photos_kb,
-    back_to_admin_kb
+    back_to_admin_kb, edit_contacts_kb
 )
 
 router = Router()
@@ -33,7 +33,15 @@ class EditLinkStates(StatesGroup):
 
 
 class EditContactsStates(StatesGroup):
-    waiting_for_contacts = State()
+    waiting_for_photo = State()
+    waiting_for_site = State()
+    waiting_for_vk = State()
+    waiting_for_tg = State()
+    waiting_for_caption = State()
+
+
+class AdminStates(StatesGroup):
+    waiting_for_id = State()
 
 
 @router.message(Command("admin"))
@@ -47,6 +55,44 @@ async def cmd_admin(message: Message):
         "👨‍💻 Админ-панель:",
         reply_markup=admin_menu_kb()
     )
+
+
+@router.callback_query(F.data == "admin_back")
+async def back_to_admin(callback: CallbackQuery, state: FSMContext):
+    """Возврат в админ-меню"""
+    await callback.message.edit_text(
+        "👨‍💻 Админ-панель:",
+        reply_markup=admin_menu_kb()
+    )
+    await state.clear()
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin_add")
+async def add_admin(callback: CallbackQuery, state: FSMContext):
+    config = load_config()
+    await callback.message.edit_text(
+        f"""
+        👤 Список администраторов: {config.bot.admin_ids}
+        Введите ID пользователя, которого хотите добавить в администраторы:
+        """,
+        reply_markup=back_to_admin_kb()
+    )
+    await state.set_state(AdminStates.waiting_for_id)
+    await callback.answer()
+
+
+@router.message(AdminStates.waiting_for_id)
+async def add_admin_id(message: Message, state: FSMContext):
+    user_id = int(message.text)
+    config = load_config()
+    config.bot.admin_ids.append(user_id)
+    save_config(config)
+    await message.answer(
+        f"✅ Пользователь с ID {user_id} добавлен в администраторы!",
+        reply_markup=admin_menu_kb()
+    )
+    await state.clear()
 
 
 # --- Редактирование текста ---
@@ -82,13 +128,7 @@ async def save_new_text(message: Message, state: FSMContext):
     new_text = message.text
 
     # Обновляем конфиг
-    config = load_config()
-    if hasattr(config.content, section):
-        getattr(config.content, section)["caption"] = new_text
-    else:
-        config.content[section]["text"] = new_text
-
-    save_config(config)
+    update_config_field(f"content.{section}.caption", new_text)
 
     await message.answer(
         f"✅ Текст раздела '{section}' успешно обновлён!",
@@ -136,11 +176,6 @@ async def save_new_photo(message: Message, state: FSMContext, bot: Bot):
 
     await bot.download_file(file.file_path, file_path)
 
-    # Обновляем конфиг
-    config = load_config()
-    getattr(config.content, section)["photo"] = file_path
-    save_config(config)
-
     await message.answer(
         f"✅ Фото для раздела '{section}' успешно обновлено!",
         reply_markup=admin_menu_kb()
@@ -180,10 +215,7 @@ async def save_new_link(message: Message, state: FSMContext):
     section = data["section"]
     new_link = message.text
 
-    # Обновляем конфиг
-    config = load_config()
-    getattr(config.content, section)["map_url"] = new_link
-    save_config(config)
+    update_config_field(f"content.{section}.url", new_link)
 
     await message.answer(
         f"✅ Ссылка для раздела '{section}' успешно обновлена!",
@@ -193,6 +225,118 @@ async def save_new_link(message: Message, state: FSMContext):
 
 
 # --- Редактирование контактов ---
+@router.callback_query(F.data == "edit_contacts")
+async def edit_contacts_menu(callback: CallbackQuery, state: FSMContext):
+
+    await callback.message.edit_text(
+        "📇 Выберите что хотите изменить:",
+        reply_markup=edit_contacts_kb()
+    )
+    await callback.answer()
+
+
+# Обработчики для каждого поля
+@router.callback_query(F.data == "edit_contacts_photo")
+async def edit_contacts_photo(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "📤 Отправьте новое фото для контактов:",
+        reply_markup=back_to_admin_kb()
+    )
+    await state.set_state(EditContactsStates.waiting_for_photo)
+    await callback.answer()
+
+
+@router.message(EditContactsStates.waiting_for_photo, F.photo)
+async def save_contacts_photo(message: Message, state: FSMContext, bot: Bot):
+    config = load_config()
+    photo = message.photo[-1]
+    file_id = photo.file_id
+    file = await bot.get_file(file_id)
+    file_path = config.content.contacts.photo
+
+    await bot.download_file(file.file_path, file_path)
+
+    await message.answer("✅ Фото контактов обновлено!", reply_markup=admin_menu_kb())
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_contacts_site")
+async def edit_contacts_site(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "🌐 Введите новую ссылку на сайт:",
+        reply_markup=back_to_admin_kb()
+    )
+    await state.set_state(EditContactsStates.waiting_for_site)
+    await callback.answer()
+
+
+@router.message(EditContactsStates.waiting_for_site)
+async def save_contacts_site(message: Message, state: FSMContext):
+
+    update_config_field(f"content.contacts.site", message.text)
+
+    await message.answer("✅ Ссылка на сайт обновлена!", reply_markup=admin_menu_kb())
+    await state.clear()
+
+
+# Аналогичные обработчики для vk, tg и caption
+@router.callback_query(F.data == "edit_contacts_vk")
+async def edit_contacts_vk(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "🔵 Введите новую ссылку VK:",
+        reply_markup=back_to_admin_kb()
+    )
+    await state.set_state(EditContactsStates.waiting_for_vk)
+    await callback.answer()
+
+
+@router.message(EditContactsStates.waiting_for_vk)
+async def save_contacts_vk(message: Message, state: FSMContext):
+
+    update_config_field(f"content.contacts.vk", message.text)
+
+    await message.answer("✅ Ссылка VK обновлена!", reply_markup=admin_menu_kb())
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_contacts_tg")
+async def edit_contacts_tg(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "📢 Введите новую ссылку Telegram:",
+        reply_markup=back_to_admin_kb()
+    )
+    await state.set_state(EditContactsStates.waiting_for_tg)
+    await callback.answer()
+
+
+@router.message(EditContactsStates.waiting_for_tg)
+async def save_contacts_tg(message: Message, state: FSMContext):
+
+    update_config_field(f"content.contacts.tg", message.text)
+
+    await message.answer("✅ Ссылка Telegram обновлена!", reply_markup=admin_menu_kb())
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_contacts_caption")
+async def edit_contacts_caption(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "📝 Введите новый заголовок:",
+        reply_markup=back_to_admin_kb()
+    )
+    await state.set_state(EditContactsStates.waiting_for_caption)
+    await callback.answer()
+
+
+@router.message(EditContactsStates.waiting_for_caption)
+async def save_contacts_caption(message: Message, state: FSMContext):
+
+    update_config_field(f"content.contacts.caption", message.text)
+
+    await message.answer("✅ Заголовок контактов обновлен!", reply_markup=admin_menu_kb())
+    await state.clear()
+
+'''
 @router.callback_query(F.data == "edit_contacts")
 async def edit_contacts(callback: CallbackQuery, state: FSMContext):
     """Редактирование контактов"""
@@ -210,23 +354,12 @@ async def save_new_contacts(message: Message, state: FSMContext):
     new_contacts = message.text
 
     # Обновляем конфиг
-    config = load_config()
-    config.content.contacts["text"] = new_contacts
-    save_config(config)
+    new_contacts_item = ContactsItem(text=new_contacts)
+    update_config("content.contacts", new_contacts_item)
 
     await message.answer(
         "✅ Контактные данные успешно обновлены!",
         reply_markup=admin_menu_kb()
     )
     await state.clear()
-
-
-@router.callback_query(F.data == "admin_back")
-async def back_to_admin(callback: CallbackQuery, state: FSMContext):
-    """Возврат в админ-меню"""
-    await callback.message.edit_text(
-        "👨‍💻 Админ-панель:",
-        reply_markup=admin_menu_kb()
-    )
-    await state.clear()
-    await callback.answer()
+'''
