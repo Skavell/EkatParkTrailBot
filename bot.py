@@ -6,7 +6,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import load_config
-from handlers import user, admin
+from handlers import user
 
 
 async def main():
@@ -20,7 +20,6 @@ async def main():
 
     # Регистрация роутеров
     dp.include_router(user.router)
-    dp.include_router(admin.router)
 
     # Запуск бота
     await bot.delete_webhook(drop_pending_updates=True)
