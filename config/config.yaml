@@ -1,0 +1,45 @@
+bot:
+  token: 1111111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-aaaa
+content:
+  main_menu:
+    photo: assets/images/main_menu.jpg
+    caption: 'Добро пожаловать в бота с маршрутами от "Парковая тропа Екатеринбурга"! 
+              Выберите интересующий вас раздел:'
+    url: https://yandex.ru/maps/54/yekaterinburg/?ll=60.613518%2C56.763991&mode=usermaps&source=constructorLink&um=constructor%3A8ec8358a7a240507c995c061f48f711a5694df1f4944e6c5aa8a6f32b3268c31&z=11.43
+  park_trail:
+    photo: assets/images/park_trail.jpg
+    caption: '💥Парковая тропа:
+
+      <b>2 лесных парков, 110 километров вокруг города и более 50 объектов интереса:</b> 
+      4 больших и 6 малых водоёма, 8 рек и 5 живых родников, высшая горная точка города и 5 скальных участков, 
+      геодезические вышки, плотины, мосты, мемориал Романовых, вокзал-музей, несколько сообществ Хранителей природы
+
+      '
+    url: https://ekatparktrail.ru/
+  mountain_trail:
+    photo: assets/images/mountain_trail.png
+    caption: '⛰ Горный маршрут:
+
+      Горный маршрут протяженностью 16,4 км с живописными видами на реку Патрушиху, 
+      Уктусские скалы и многое другое. 
+      <a href="https://telegra.ph/Marshrut-Gornyj-legenda-04-05">Подробнее.</a>
+
+
+      '
+    url: https://yandex.ru/maps/54/yekaterinburg/?ll=60.660757%2C56.742027&mode=usermaps&source=constructorLink&um=constructor%3A8ec8358a7a240507c995c061f48f711a5694df1f4944e6c5aa8a6f32b3268c31&z=13.32
+  southwest_trail:
+    photo: assets/images/southwest_trail.png
+    caption: '🌄 Юго-Западный маршрут:
+
+      Юго-Западный маршрут имеет протяженность 13,1 км. 
+      Река, Каменоломня и другие интересные места. 
+      <a href="https://telegra.ph/Marshrut-YUgo-Zapadnyj-legenda-04-05">Подробнее.</a>
+
+      '
+    url: https://yandex.ru/maps/54/yekaterinburg/?ll=60.561599%2C56.796246&mode=usermaps&source=constructorLink&um=constructor%3A8ec8358a7a240507c995c061f48f711a5694df1f4944e6c5aa8a6f32b3268c31&z=13
+  contacts:
+    photo: assets/images/contacts.jpg
+    site: https://ekatparktrail.ru/map
+    vk: https://vk.com/ekatparktrail
+    tg: https://t.me/EkatParkTrail
+    caption: Контакты организаторов
