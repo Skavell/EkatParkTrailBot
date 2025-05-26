@@ -40,7 +40,7 @@ async def about_park_trail(callback: CallbackQuery):
 
 @router.callback_query(F.data == "about_mountain")
 async def about_mountain(callback: CallbackQuery):
-    """Информация о горном и юго-западном маршрутах"""
+    """Информация о горном маршруте"""
     config = load_config()
 
     media = InputMediaPhoto(
@@ -57,7 +57,7 @@ async def about_mountain(callback: CallbackQuery):
 
 @router.callback_query(F.data == "about_southwest")
 async def about_southwest(callback: CallbackQuery):
-    """Информация о горном и юго-западном маршрутах"""
+    """Информация о юго-западном маршруте"""
     config = load_config()
 
     media = InputMediaPhoto(
