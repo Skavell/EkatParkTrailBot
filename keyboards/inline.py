@@ -4,8 +4,8 @@ from aiogram.types import InlineKeyboardButton
 from config import load_config
 
 
-# --- Главное меню ---
 def main_menu_kb():
+    """Создание клавиатуры главного меню"""
     config = load_config()
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="О Парковой тропе", callback_data="about_park_trail"))
@@ -20,8 +20,8 @@ def main_menu_kb():
     return builder.as_markup()
 
 
-# --- Меню "Контакты организаторов" ---
 def contacts_kb(site, vk, tg):
+    """Создание клавиатуры для контактов организаторов"""
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="Группа Вконтакте", url=vk))
     builder.row(InlineKeyboardButton(text="Канал Телеграм", url=tg))
@@ -30,8 +30,8 @@ def contacts_kb(site, vk, tg):
     return builder.as_markup()
 
 
-# --- Дополнительные кнопки в каждом меню, по типу "назад"---
 def back_to_main_kb(route_type=None, map_url=None):
+    """Создание кнопки "Назад" с возможностью перехода на карту"""
     builder = InlineKeyboardBuilder()
     if route_type and map_url:
         if route_type == "park_trail":
